@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,87 +19,61 @@ namespace practice
             Random rand = new Random();
             //Monster（名前,HP,攻撃力,防御力,スピード,属性）
             List<Monster> monsters = new List<Monster>();
-            monsters.Add(new Monster("ヒトカゲ", 100, 30, 10, rand.Next(20, 30), MonsterType.ほのお));
-            monsters.Add(new Monster("ゼニガメ", 100, 30, 10, rand.Next(20, 30), MonsterType.みず));
-            monsters.Add(new Monster("フシギダネ", 100, 30, 10, rand.Next(20, 30), MonsterType.くさ));
+            monsters.Add(new Monster("ヒトカゲ", 200, 30, 10, rand.Next(20, 30), MonsterType.ほのお));
+            monsters.Add(new Monster("ゼニガメ", 200, 30, 10, rand.Next(20, 30), MonsterType.みず));
+            monsters.Add(new Monster("フシギダネ", 200, 30, 10, rand.Next(20, 30), MonsterType.くさ));
+            List<Monster> rivalmonsters = new List<Monster>();
+            rivalmonsters.Add(new Monster("ヒトカゲ", 200, 30, 10, rand.Next(20, 30), MonsterType.ほのお));
+            rivalmonsters.Add(new Monster("ゼニガメ", 200, 30, 10, rand.Next(20, 30), MonsterType.みず));
+            rivalmonsters.Add(new Monster("フシギダネ", 200, 30, 10, rand.Next(20, 30), MonsterType.くさ));
 
-            Human main = new Human(monsters,"mizuki");
-            Human rival = new Human(monsters);
+            Human main = new Human(monsters, "mizuki");
+            Human rival = new Human(rivalmonsters);
             Console.WriteLine("{0} が {1} にバトルを仕掛けてきた", rival.Name, main.Name);
 
             //一旦全部出す
-            foreach (Monster monster in main.Monsters)
-            {
-                Console.WriteLine("\n{0}\tHp:{1}/{2}\t状態:{3}", monster.Name,monster.RemainHp,monster.MaxHp,monster.isDead);
-                foreach (Skill skill in monster.SkillSet)
-                {
-                    Console.WriteLine("\n・{0}\n{1}\t{2}\t{3}\t{4}", skill.SkillName, skill.Type, skill.Attack, skill.Heal, skill.Num);
-                }
-            }
-            Console.WriteLine("---終了---");
+            //foreach (Monster monster in main.Monsters)
+            //{
+            //    Console.WriteLine("\n{0}\tHp:{1}/{2}\t状態:{3}", monster.Name,monster.RemainHp,monster.MaxHp,monster.isDead);
+            //    foreach (Skill skill in monster.SkillSet)
+            //    {
+            //        Console.WriteLine("\n・{0}\n{1}\t{2}\t{3}\t{4}", skill.SkillName, skill.Type, skill.Attack, skill.Heal, skill.Num);
+            //    }
+            //}
+            //Console.WriteLine("---終了---");
 
             //ここからバトルロジック
+            //int rivalMonsterNum = rival.Monsters.Count;//ライバル手持ちのランダム生成用
             bool win = false;
             bool lose = false;
             bool turn = false;
             Monster now;//今戦っているモンスター主人公
             Monster rivalNow;//今戦っているモンスターライバル
 
-            //スタメンを決める
-            for (int i = 0; i < main.Monsters.Count; i++)//主人公のモンスターリストから
-            {
-                if (!main.Monsters[i].isDead)
-                {
-                    Console.WriteLine("【{0}】 {1}", i + 1, main.Monsters[i].Name);
-                }
-                else
-                {
-                    Console.WriteLine("【{0}】 {1}(ひんし)", i + 1, main.Monsters[i].Name);
-                }
-            }
-            while (true)
-            {
-                Console.WriteLine("どれを出す？");
-                string input = Console.ReadLine();
-                if (int.TryParse(input, out int num))
-                {
-                    if (1 <= num && num <= 3)
-                    {
-                        if (!main.Monsters[num-1].isDead)
-                        {
-                            now = main.Monsters[num-1];
-                            Console.WriteLine("{0}は{1}をくりだした。", main.Name, now.Name);
-                            break;
-                        }
-                        else
-                        {
-                            Console.WriteLine("{0}はひんしです", main.Monsters[num-1].Name);
-                        }
-                    }
-                }
-                Console.WriteLine("1～{0}で入力してください", main.Monsters.Count);
-            }
+            //主人個のスタメンを決める
+            now = main.NowSelect();
 
             //ライバルのスタメン
-            rivalNow = rival.Monsters[rand.Next(0,rival.Monsters.Count)];
-            Console.WriteLine("{0}は{1}をくりだした",rival.Name,rivalNow.Name);
+            rivalNow = rival.Monsters[rand.Next(0, rival.Monsters.Count)];
+            Console.WriteLine("\n{0}は{1}をくりだした", rival.Name, rivalNow.Name);
 
             //先行を決める
             if (rivalNow.Speed < now.Speed)
             {
                 turn = true;//主人公先行
             }
-            else if(rivalNow.Speed > now.Speed)
+            else if (rivalNow.Speed > now.Speed)
             {
                 turn = false;//ライバル先行
             }
             else
             {
-                int tmp = rand.Next(0, 2);
-                if (tmp == 0)
+                int precedence = rand.Next(0, 2);
+                if (precedence == 0)
                 {
                     turn = true;//主人公先行
-                }else if (tmp == 1)
+                }
+                else if (precedence == 1)
                 {
                     turn = false;//ライバル先行
                 }
@@ -105,37 +82,99 @@ namespace practice
             //ここからバトルロジック（マジ）
             while (true)
             {
+                Console.WriteLine("\n{0} HP:{1}\nvs\n{2} HP:{3}\n", now.Name, now.RemainHp, rivalNow.Name, rivalNow.RemainHp);
+                Thread.Sleep(20);
                 if (turn)//主人公のターン
                 {
+                    Console.WriteLine("{0}の{1}のこうげき", main.Name, now.Name);
 
+                    if (now.SkillRemain())//使えるスキルが残っていた場合
+                    {
+                        //ワザの入力受付と攻撃も行う
+                        int i = 0;
+                        int num = 0;
+
+                        while (true)
+                        {
+                            for (i = 1; i <= now.SkillSet.Length; i++)
+                            {
+                                Console.WriteLine("【{0}】{1}\t残り{2}回", i, now.SkillSet[i - 1].SkillName, now.SkillSet[i - 1].Num);
+                            }
+                            Console.WriteLine("【{0}】こうたい", i);
+                            Console.WriteLine("どのワザをだす？");
+                            string ss = Console.ReadLine();
+                            if (int.TryParse(ss, out num))
+                            {
+                                if (1 <= num && num <= 4)
+                                {
+                                    if (now.SkillSet[num-1].Num == 0)
+                                    {
+                                        Console.WriteLine("ppがない");
+                                    }
+                                    else
+                                    {
+                                        now.AttackEnemy(main.Name,rivalNow, num - 1);
+                                        break;
+                                    }
+                                }
+                                else if (num == 5)
+                                {
+                                    now = main.NowSelect();
+                                    break;
+                                }
+                            }
+                            Console.WriteLine("1～5で入力してください");
+                        }
+                    }
+                    else//使えるスキルが残っていなかった場合
+                    {
+                        now.AttackEnemy(rivalNow);
+                    }
+
+                    //残りの手持ちの生存確認
+                    if (rival.RemainCheck())
+                    {
+                        win = true;
+                        break;
+                    }
+                    //ライバルのモンスターが倒れたら交代
+                    if (rivalNow.isDead)
+                    {
+                        Console.WriteLine("{0}はたおれた", rivalNow.Name);
+                        //rivalMonsterNum--;
+
+                        while (true)
+                        {
+                            rivalNow = rival.Monsters[rand.Next(0, rival.Monsters.Count)];
+                            if (!rivalNow.isDead)
+                            {
+                                break;
+                            }
+                        }
+                        Console.WriteLine("{0}は{1}をくりだした", rival.Name, rivalNow.Name);
+                    }
+
+                    turn = false;
                 }
                 else//ライバルのターン
                 {
+                    rivalNow.AttackEnemy(rival.Name,now, rand.Next(0, 4));
 
+                    if (main.RemainCheck())
+                    {
+                        lose = true;
+                        break;
+                    }
+                    //主人公のモンスターが倒れたら交代
+                    if (now.isDead)
+                    {
+                        Console.WriteLine("{0}はたおれた", now.Name);
+                        now=main.NowSelect();
+                        Console.WriteLine("{0}は{1}をくりだした", main.Name, now.Name);
+                    }
+                    turn = true;
                 }
-
-
-
-
-
-
-
-                if (main.RemainCheck())
-                {
-                    win = true;
-                    break;
-                }
-
-
-
-
-
-
-                if (rival.RemainCheck())
-                {
-                    lose = true;
-                    break;
-                }
+                Console.WriteLine("-----turn change-----");
             }
             if (win)
             {
@@ -239,6 +278,45 @@ namespace practice
             }
             return ans;//手持ちモンスターが全てひんしならtrue
         }
+        public Monster NowSelect()
+        {
+            Monster now=null;
+            //スタメンを決める
+            for (int i = 0; i < this.Monsters.Count; i++)//主人公のモンスターリストから
+            {
+                if (!this.Monsters[i].isDead)
+                {
+                    Console.WriteLine("【{0}】 {1}", i + 1, this.Monsters[i].Name);
+                }
+                else
+                {
+                    Console.WriteLine("【{0}】 {1}(ひんし)", i + 1, this.Monsters[i].Name);
+                }
+            }
+            while (true)
+            {
+                Console.WriteLine("どれを出す？");
+                string input = Console.ReadLine();
+                if (int.TryParse(input, out int num))
+                {
+                    if (1 <= num && num <= 3)
+                    {
+                        if (!this.Monsters[num - 1].isDead)
+                        {
+                            now = this.Monsters[num - 1];
+                            Console.WriteLine("{0}は{1}をくりだした。", this.Name, now.Name);
+                            break;
+                        }
+                        else
+                        {
+                            Console.WriteLine("{0}はひんしです", this.Monsters[num - 1].Name);
+                        }
+                    }
+                }
+                Console.WriteLine("1～{0}で入力してください", this.Monsters.Count);
+            }
+            return now;
+        }
 
     }
     public class Monster
@@ -272,10 +350,7 @@ namespace practice
             string[] fire = { "パンチ", "ニトロチャージ", "かえんほうしゃ", "かいふく" };
             string[] water = { "パンチ", "なみのり", "ハイドロポンプ", "かいふく" };
             string[] grass = { "パンチ", "マジカルリーフ", "ソーラービーム", "かいふく" };
-
-            //Random rand=new Random();
-            //int[] att = { rand.Next(5, 10), rand.Next(15, 20), rand.Next(20, 30), 0 };//3体の攻撃力をバラバラにさせたいが、
-
+            
             SkillSet[0] = new Skill("パンチ", SkillType.ノーマル, new Random().Next(5, 10), 0);
             for (int i = 1; i < this.SkillSet.Length - 1; i++)
             {
@@ -317,7 +392,7 @@ namespace practice
 
         public bool SkillRemain()//return true if you use up all skills
         {
-            bool ans = true;
+            bool ans = false;
             foreach (var skill in SkillSet)
             {
                 if (skill.Num != 0)
@@ -327,6 +402,75 @@ namespace practice
             }
             return ans;
         }
+        public void AttackEnemy(string name,Monster target,int skillNum)//ダメージ計算=monster.Attack+skill.Attack-target.Defence
+        {
+            if(skillNum == 3)//回復
+            {
+                this.RemainHp += this.SkillSet[skillNum].Heal;
+                int tmp = 0;
+                if (this.RemainHp > this.MaxHp)
+                {
+                    tmp = this.RemainHp-this.MaxHp;
+                    this.RemainHp=this.MaxHp;
+                    Console.WriteLine("{0} は {1} かいふくした", this.Name, tmp);
+                }
+                else
+                {
+                    Console.WriteLine("{0} は {1} かいふくした", this.Name, this.SkillSet[skillNum].Heal);
+                }
+                this.SkillSet[skillNum].Num--;
+            }
+            else
+            {
+                Console.WriteLine("{0}の{1}は{2}をくりだした", name, this.Name, this.SkillSet[skillNum].SkillName);
+                int att = 0;
+                if (this.SkillSet[skillNum].Type == SkillType.ほのお && target.Type == MonsterType.くさ)
+                {
+                    att = this.Attack + (int)(this.SkillSet[skillNum].Attack * 1.5) - target.Defence;
+                }
+                else if (this.SkillSet[skillNum].Type == SkillType.みず && target.Type == MonsterType.ほのお)
+                {
+                    att = this.Attack + (int)(this.SkillSet[skillNum].Attack * 1.5) - target.Defence;
+                }
+                else if (this.SkillSet[skillNum].Type == SkillType.くさ && target.Type == MonsterType.みず)
+                {
+                    att = this.Attack + (int)(this.SkillSet[skillNum].Attack * 1.5) - target.Defence;
+                }
+                else
+                {
+                    att = this.Attack + this.SkillSet[skillNum].Attack - target.Defence;
+                }
+                target.RemainHp -= att;
+                Console.WriteLine("{0}に{1}のダメージ", target.Name, att);
+                this.SkillSet[skillNum].Num--;//プロパティあるからメソッドいらない
+                                              //HPのチェック
+                if (target.RemainHp < 0)
+                {
+                    target.isDead = true;
+                    target.RemainHp = 0;
+                }
+            }
+
+
+
+
+            
+            /*問題点
+             * 1.ポケモンのベースの攻撃力が回復を選択した際にも与えてしまっている。
+             * 2.
+             */
+
+
+
+            
+        }
+        public void AttackEnemy(Monster target)
+        {
+            Console.WriteLine("{0}はじたばたした",this.Name);
+            int att= new Random().Next(5, 11);
+            target.RemainHp -= att;
+            Console.WriteLine("{0}に{1}のダメージ", target.Name, att);
+        }
     }
     public class Skill
     {
@@ -334,7 +478,7 @@ namespace practice
         public SkillType Type { set; get; }//skill type
         public int Attack { set; get; }//skill base of attack
         public int Heal { set; get; } = 0;
-        public int Num { set; get; } = 3;//how many used this skill 
+        public int Num { set; get; } = 3;//how many used this skill ,but rival is ignore
         public Skill(string name, SkillType type, int attack, int heal)
         {
             this.SkillName = name;
@@ -342,13 +486,9 @@ namespace practice
             this.Attack = attack;
             this.Heal = heal;
         }
-        public void SkillUse()
-        {
-            this.Num -= 1;
-        }
 
 
     }
     public enum MonsterType { ほのお = 0, みず = 1, くさ = 2 }//
-    public enum SkillType { ほのお = 0, みず = 1, くさ= 2, ノーマル = 3 }
+    public enum SkillType { ほのお = 0, みず = 1, くさ = 2, ノーマル = 3 }
 }
