@@ -1,0 +1,8 @@
+C:\Users\ia\source\repos\practice\practice\obj\Debug\practice.csproj.AssemblyReference.cache
+C:\Users\ia\source\repos\practice\practice\obj\Debug\practice.csproj.SuggestedBindingRedirects.cache
+C:\Users\ia\source\repos\practice\practice\obj\Debug\practice.csproj.CoreCompileInputs.cache
+C:\Users\ia\source\repos\practice\practice\bin\Debug\practice.exe.config
+C:\Users\ia\source\repos\practice\practice\bin\Debug\practice.exe
+C:\Users\ia\source\repos\practice\practice\bin\Debug\practice.pdb
+C:\Users\ia\source\repos\practice\practice\obj\Debug\practice.exe
+C:\Users\ia\source\repos\practice\practice\obj\Debug\practice.pdb
