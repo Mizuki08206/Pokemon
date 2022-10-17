@@ -14,3 +14,11 @@ C:\Users\ia\Source\Repos\Pokemon\practice\obj\Debug\practice.csproj.SuggestedBin
 C:\Users\ia\Source\Repos\Pokemon\practice\obj\Debug\practice.csproj.CoreCompileInputs.cache
 C:\Users\ia\Source\Repos\Pokemon\practice\obj\Debug\practice.exe
 C:\Users\ia\Source\Repos\Pokemon\practice\obj\Debug\practice.pdb
+C:\Users\m-otomo\Source\Repos\Pokemon\practice\bin\Debug\practice.exe.config
+C:\Users\m-otomo\Source\Repos\Pokemon\practice\bin\Debug\practice.exe
+C:\Users\m-otomo\Source\Repos\Pokemon\practice\bin\Debug\practice.pdb
+C:\Users\m-otomo\Source\Repos\Pokemon\practice\obj\Debug\practice.csproj.AssemblyReference.cache
+C:\Users\m-otomo\Source\Repos\Pokemon\practice\obj\Debug\practice.csproj.SuggestedBindingRedirects.cache
+C:\Users\m-otomo\Source\Repos\Pokemon\practice\obj\Debug\practice.csproj.CoreCompileInputs.cache
+C:\Users\m-otomo\Source\Repos\Pokemon\practice\obj\Debug\practice.exe
+C:\Users\m-otomo\Source\Repos\Pokemon\practice\obj\Debug\practice.pdb

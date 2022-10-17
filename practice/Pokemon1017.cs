@@ -98,7 +98,7 @@ namespace practice
                         {
                             for (i = 1; i <= now.SkillSet.Length; i++)
                             {
-                                Console.WriteLine("【{0}】{1}\t残り{2}回", i, now.SkillSet[i - 1].SkillName, now.SkillSet[i - 1].Num);
+                                Console.WriteLine("【{0}】{1}\tpp:{2}回", i, now.SkillSet[i - 1].SkillName, now.SkillSet[i - 1].Num);
                             }
                             Console.WriteLine("【{0}】こうたい", i);
                             Console.WriteLine("どのワザをだす？");
@@ -402,7 +402,7 @@ namespace practice
             }
             return ans;
         }
-        public void AttackEnemy(string name,Monster target,int skillNum)//ダメージ計算=monster.Attack+skill.Attack-target.Defence
+        public void AttackEnemy(string name,Monster target,int skillNum)//ダメージ計算=monster.Attack+skill.Attack-target.Defence、急所なら1.5倍
         {
             if(skillNum == 3)//回復
             {
@@ -456,7 +456,7 @@ namespace practice
 
             
             /*問題点
-             * 1.ポケモンのベースの攻撃力が回復を選択した際にも与えてしまっている。
+             * 1.
              * 2.
              */
 
