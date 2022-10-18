@@ -17,8 +17,7 @@ namespace practice
         public static void Main(string[] args)
         {
             /*問題点
-             * 1.ライバルのポケモンが倒れた場合でも攻撃してくる
-             * 2.きゅうしょはやっていない
+             * 1.きゅうしょはやっていない
              */
 
             Random rand = new Random();
@@ -355,7 +354,7 @@ namespace practice
             
             while (true)
             {
-                //Console.Clear();
+                Console.Clear();
                 for (int i = 0; i < this.Monsters.Count; i++)//主人公のモンスターリストから
                 {
                     if (!this.Monsters[i].isDead)
@@ -581,6 +580,6 @@ namespace practice
 
 
     }
-    public enum MonsterType { ほのお = 0, みず = 1, くさ = 2 }//
+    public enum MonsterType { ほのお = 0, みず = 1, くさ = 2 }
     public enum SkillType { ほのお = 0, みず = 1, くさ = 2, ノーマル = 3 }
 }
