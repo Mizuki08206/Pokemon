@@ -206,7 +206,6 @@ namespace practice
                     Console.WriteLine("---{0}のターン---\n", rival.Name);
                     rivalNow.AttackEnemy(rival.Name, now, rand.Next(0, 4));
 
-                    
                     //主人公のモンスターが倒れたら交代
                     if (now.isDead)
                     {
@@ -462,7 +461,6 @@ namespace practice
             }
             SkillSet[3] = new Skill("かいふく", SkillType.ノーマル, 0, 20);
         }
-
         public bool SkillRemain()//return true if you use up all skills
         {
             bool ans = false;

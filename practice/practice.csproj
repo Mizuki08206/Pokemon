@@ -47,8 +47,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Pokemon1017.cs" />
-    <Compile Include="Day1014.cs" />
-    <Compile Include="Day1013.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
