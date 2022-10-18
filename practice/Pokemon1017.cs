@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Remoting.Contexts;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,21 +16,26 @@ namespace practice
     {
         public static void Main(string[] args)
         {
-            
+            /*問題点
+             * 1.ライバルのポケモンが倒れた場合でも攻撃してくる
+             * 2.きゅうしょはやっていない
+             */
+
             Random rand = new Random();
             //Monster（名前,HP,攻撃力,防御力,スピード,属性）
             List<Monster> monsters = new List<Monster>();
-            monsters.Add(new Monster("ヒトカゲ", 200, 30, 10, rand.Next(20, 30), MonsterType.ほのお));
-            monsters.Add(new Monster("ゼニガメ", 200, 30, 10, rand.Next(20, 30), MonsterType.みず));
-            monsters.Add(new Monster("フシギダネ", 200, 30, 10, rand.Next(20, 30), MonsterType.くさ));
+            monsters.Add(new Monster("ヒバニー", 200, 30, 10, rand.Next(20, 30), MonsterType.ほのお));
+            monsters.Add(new Monster("メッソン", 200, 30, 10, rand.Next(20, 30), MonsterType.みず));
+            monsters.Add(new Monster("サルノリ", 200, 30, 10, rand.Next(20, 30), MonsterType.くさ));
             List<Monster> rivalmonsters = new List<Monster>();
-            rivalmonsters.Add(new Monster("ヒトカゲ", 200, 30, 10, rand.Next(20, 30), MonsterType.ほのお));
-            rivalmonsters.Add(new Monster("ゼニガメ", 200, 30, 10, rand.Next(20, 30), MonsterType.みず));
-            rivalmonsters.Add(new Monster("フシギダネ", 200, 30, 10, rand.Next(20, 30), MonsterType.くさ));
+            rivalmonsters.Add(new Monster("ポカブ", 200, 30, 10, rand.Next(20, 30), MonsterType.ほのお));
+            rivalmonsters.Add(new Monster("ミジュマル", 200, 30, 10, rand.Next(20, 30), MonsterType.みず));
+            rivalmonsters.Add(new Monster("ツタージャ", 200, 30, 10, rand.Next(20, 30), MonsterType.くさ));
 
             Human main = new Human(monsters, "mizuki");
             Human rival = new Human(rivalmonsters);
             Console.WriteLine("{0} が {1} にバトルを仕掛けてきた", rival.Name, main.Name);
+            Thread.Sleep(1000);
 
             //一旦全部出す
             //foreach (Monster monster in main.Monsters)
@@ -78,14 +84,43 @@ namespace practice
                     turn = false;//ライバル先行
                 }
             }
-
+            bool a=false;
             //ここからバトルロジック（マジ）
             while (true)
             {
+                if (a)
+                {
+                    //Console.WriteLine("ふたたび先行を決める");
+                    //先行を決める
+                    if (rivalNow.Speed < now.Speed)
+                    {
+                        turn = true;//主人公先行
+                    }
+                    else if (rivalNow.Speed > now.Speed)
+                    {
+                        turn = false;//ライバル先行
+                    }
+                    else
+                    {
+                        int precedence = rand.Next(0, 2);
+                        if (precedence == 0)
+                        {
+                            turn = true;//主人公先行
+                        }
+                        else if (precedence == 1)
+                        {
+                            turn = false;//ライバル先行
+                        }
+                    }
+                    a = false;
+                }
+                Thread.Sleep(1000);
+                Console.Clear();
                 Console.WriteLine("\n{0} HP:{1}\nvs\n{2} HP:{3}\n", now.Name, now.RemainHp, rivalNow.Name, rivalNow.RemainHp);
-                Thread.Sleep(20);
+                
                 if (turn)//主人公のターン
                 {
+                    Console.WriteLine("---{0}のターン---\n",main.Name);
                     Console.WriteLine("{0}の{1}のこうげき", main.Name, now.Name);
 
                     if (now.SkillRemain())//使えるスキルが残っていた場合
@@ -94,7 +129,7 @@ namespace practice
                         int i = 0;
                         int num = 0;
 
-                        while (true)
+                        while (true)//ワザセレクト
                         {
                             for (i = 1; i <= now.SkillSet.Length; i++)
                             {
@@ -107,13 +142,13 @@ namespace practice
                             {
                                 if (1 <= num && num <= 4)
                                 {
-                                    if (now.SkillSet[num-1].Num == 0)
+                                    if (now.SkillSet[num - 1].Num == 0)
                                     {
                                         Console.WriteLine("ppがない");
                                     }
                                     else
                                     {
-                                        now.AttackEnemy(main.Name,rivalNow, num - 1);
+                                        now.AttackEnemy(main.Name, rivalNow, num - 1);
                                         break;
                                     }
                                 }
@@ -122,8 +157,17 @@ namespace practice
                                     now = main.NowSelect();
                                     break;
                                 }
+                                else
+                                {
+                                    Console.WriteLine("1～5で入力してください");
+                                }
                             }
-                            Console.WriteLine("1～5で入力してください");
+
+                            Thread.Sleep(1000);
+                            Console.Clear();
+                            Console.WriteLine("---{0}のターン---\n", main.Name);
+                            Console.WriteLine("{0}の{1}のこうげき", main.Name, now.Name);
+                            Console.WriteLine("\n{0} HP:{1}\nvs\n{2} HP:{3}\n", now.Name, now.RemainHp, rivalNow.Name, rivalNow.RemainHp);
                         }
                     }
                     else//使えるスキルが残っていなかった場合
@@ -131,63 +175,66 @@ namespace practice
                         now.AttackEnemy(rivalNow);
                     }
 
-                    //残りの手持ちの生存確認
-                    if (rival.RemainCheck())
-                    {
-                        win = true;
-                        break;
-                    }
+                    
                     //ライバルのモンスターが倒れたら交代
                     if (rivalNow.isDead)
                     {
-                        Console.WriteLine("{0}はたおれた", rivalNow.Name);
-                        //rivalMonsterNum--;
+                        Console.WriteLine("{1}の{0}はたおれた", rivalNow.Name,rival.Name);
 
+                        //残りの手持ちの生存確認
+                        if (rival.RemainCheck())
+                        {
+                            Console.WriteLine("{0}はもうたたかえるポケモンがいない", rival.Name);
+                            win = true;
+                            break;
+                        }
                         while (true)
                         {
                             rivalNow = rival.Monsters[rand.Next(0, rival.Monsters.Count)];
-                            if (!rivalNow.isDead)
+                            if (!rivalNow.isDead)//ひんしもとってくるが、if文ではじいている
                             {
                                 break;
                             }
                         }
-                        Console.WriteLine("{0}は{1}をくりだした", rival.Name, rivalNow.Name);
+                        a = true;
+                        Console.WriteLine("\n{0}は{1}をくりだした", rival.Name, rivalNow.Name);
                     }
-
+                    Thread.Sleep(1000);
                     turn = false;
                 }
                 else//ライバルのターン
                 {
-                    rivalNow.AttackEnemy(rival.Name,now, rand.Next(0, 4));
+                    Console.WriteLine("---{0}のターン---\n", rival.Name);
+                    rivalNow.AttackEnemy(rival.Name, now, rand.Next(0, 4));
 
-                    if (main.RemainCheck())
-                    {
-                        lose = true;
-                        break;
-                    }
+                    
                     //主人公のモンスターが倒れたら交代
                     if (now.isDead)
                     {
                         Console.WriteLine("{0}はたおれた", now.Name);
-                        now=main.NowSelect();
-                        Console.WriteLine("{0}は{1}をくりだした", main.Name, now.Name);
+                        if (main.RemainCheck())
+                        {
+                            Console.WriteLine("{0}はもうたたかえるポケモンがいない", main.Name);
+                            lose = true;
+                            break;
+                        }
+                        a = true;
+                        now = main.NowSelect();
                     }
                     turn = true;
+                    Thread.Sleep(3000);
                 }
-                Console.WriteLine("-----turn change-----");
+                Console.WriteLine("\n-----turn change-----");
             }
             if (win)
             {
-                Console.WriteLine("{0}は{1}の戦いに勝った。", main.Name, rival.Name);
+                Console.WriteLine("\n\n{0}は{1}の戦いに勝った。\n", main.Name, rival.Name);
             }
             else if (lose)
             {
-                Console.WriteLine("{0}は{1}の戦いに負けた", main.Name, rival.Name);
+                Console.WriteLine("\n\n{0}は{1}の戦いに負けた\n", main.Name, rival.Name);
                 Console.WriteLine("{0}は目の前が真っ暗になった。", main.Name);
             }
-
-
-
         }
     }
     public class Inspection1
@@ -239,7 +286,7 @@ namespace practice
             //    sw.WriteLine("abcde");
             //};
             //上と下やっていることは同じ、プロジェクトのexeファイルが基点の相対パス
-            //string path = @"..\..\tmp.txt";
+            //string path = @"pokemonData.txt";
             //using (StreamWriter sw = new StreamWriter(path, false, Encoding.UTF8))
             //{
             //    sw.WriteLine("abcde");
@@ -250,6 +297,29 @@ namespace practice
             //now.RemainHp -= 20;
             //Console.WriteLine("aaaaaaaaaaaaa:{0}", now.RemainHp);//出力：80
             //Console.WriteLine("aaaaaaaaaaaaa:{0}", main.Monsters[num].RemainHp);//出力：80
+
+            //参照型の検証2
+            //List<Aaa> array = new List<Aaa>();
+            //array.Add(new Aaa("aaaaa"));
+            //array.Add(new Aaa("bbbbb"));
+            //array.Add(new Aaa("ccccc"));
+            //Aaa now = array[0];
+            //now.name = "aaadd";
+            //Console.WriteLine("{0} / {1}", now.name, array[0].name);//出力：aaadd / aaadd
+            //array.RemoveAt(0);
+            //Console.WriteLine("{0} / {1}", now.name, array[0].name);//出力：aaadd / bbbbb
+            //結論
+            //参照型のコピーは、removeや再代入をしても、ヒープ領域にオブジェクトが残る。
+            //使わなくなったオブジェクトはガベージコレクションで削除されるか、明示的にガベージコレクション「GC.Collect();」を呼び出す必要がある。
+            //検証のしようがない気がする
+        }
+    }
+    public class Aaa
+    {
+        public string name { get; set; }
+        public Aaa(string name)
+        {
+            this.name = name;
         }
     }
     public class Human
@@ -282,20 +352,22 @@ namespace practice
         {
             Monster now=null;
             //スタメンを決める
-            for (int i = 0; i < this.Monsters.Count; i++)//主人公のモンスターリストから
-            {
-                if (!this.Monsters[i].isDead)
-                {
-                    Console.WriteLine("【{0}】 {1}", i + 1, this.Monsters[i].Name);
-                }
-                else
-                {
-                    Console.WriteLine("【{0}】 {1}(ひんし)", i + 1, this.Monsters[i].Name);
-                }
-            }
+            
             while (true)
             {
-                Console.WriteLine("どれを出す？");
+                //Console.Clear();
+                for (int i = 0; i < this.Monsters.Count; i++)//主人公のモンスターリストから
+                {
+                    if (!this.Monsters[i].isDead)
+                    {
+                        Console.WriteLine("【{0}】 {1}", i + 1, this.Monsters[i].Name);
+                    }
+                    else
+                    {
+                        Console.WriteLine("【{0}】 {1}(ひんし)", i + 1, this.Monsters[i].Name);
+                    }
+                }
+                Console.Write("\nどれを出す？>>");
                 string input = Console.ReadLine();
                 if (int.TryParse(input, out int num))
                 {
@@ -314,6 +386,8 @@ namespace practice
                     }
                 }
                 Console.WriteLine("1～{0}で入力してください", this.Monsters.Count);
+                Thread.Sleep(1000);
+                Console.Clear();
             }
             return now;
         }
@@ -427,14 +501,32 @@ namespace practice
                 if (this.SkillSet[skillNum].Type == SkillType.ほのお && target.Type == MonsterType.くさ)
                 {
                     att = this.Attack + (int)(this.SkillSet[skillNum].Attack * 1.5) - target.Defence;
+                    Console.WriteLine("こうかはばつぐんだ！");
                 }
                 else if (this.SkillSet[skillNum].Type == SkillType.みず && target.Type == MonsterType.ほのお)
                 {
                     att = this.Attack + (int)(this.SkillSet[skillNum].Attack * 1.5) - target.Defence;
+                    Console.WriteLine("こうかはばつぐんだ！");
                 }
                 else if (this.SkillSet[skillNum].Type == SkillType.くさ && target.Type == MonsterType.みず)
                 {
-                    att = this.Attack + (int)(this.SkillSet[skillNum].Attack * 1.5) - target.Defence;
+                    att = this.Attack + (int)(this.SkillSet[skillNum].Attack *1.5) - target.Defence;
+                    Console.WriteLine("こうかはばつぐんだ！");
+                }
+                else if (this.SkillSet[skillNum].Type == SkillType.ほのお && target.Type == MonsterType.みず)
+                {
+                    att = this.Attack + (int)(this.SkillSet[skillNum].Attack * 0.7) - target.Defence;
+                    Console.WriteLine("こうかはいまひとつのようだ");
+                }
+                else if (this.SkillSet[skillNum].Type == SkillType.みず && target.Type == MonsterType.くさ)
+                {
+                    att = this.Attack + (int)(this.SkillSet[skillNum].Attack * 0.7) - target.Defence;
+                    Console.WriteLine("こうかはいまひとつのようだ");
+                }
+                else if (this.SkillSet[skillNum].Type == SkillType.くさ && target.Type == MonsterType.ほのお)
+                {
+                    att = this.Attack + (int)(this.SkillSet[skillNum].Attack * 0.7) - target.Defence;
+                    Console.WriteLine("こうかはいまひとつのようだ");
                 }
                 else
                 {
